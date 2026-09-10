@@ -59,14 +59,17 @@ class _TelaCalculadoraState extends State<TelaCalculadora> {
   //   _areaController, _produtividadeController, _cotacaoController.
   // Exemplo: final _areaController = TextEditingController();
   // -------------------------------------------------------------------
-
+  final _areaController = TextEditingController();
+  final _produtividadeController = TextEditingController();
+  final _cotacaoController = TextEditingController();
 
   // -------------------------------------------------------------------
   // TODO PASSO 4 — Crie o estado do resultado:
   //   double? _receita;   (começa nulo: ainda não há cálculo)
   //   String? _erro;      (mensagem de validação, quando houver)
   // -------------------------------------------------------------------
-
+  double? _receita;
+  String? _erro;
 
   // -------------------------------------------------------------------
   // TODO PASSO 6 — A função que calcula.
@@ -79,12 +82,38 @@ class _TelaCalculadoraState extends State<TelaCalculadora> {
   //   setState(() { ... });
   // }
   // -------------------------------------------------------------------
+  void _calcular() {
+    final area = double.tryParse(_areaController.text.replaceAll(',', '.'));
+    final produtividade = double.tryParse(_produtividadeController.text.replaceAll(',', '.'));
+    final cotacao = double.tryParse(_cotacaoController.text.replaceAll(',', '.'));
 
+    setState(() {
+      if (area == null || produtividade == null || cotacao == null){
+        _erro = 'Preencha os três campos com números válidos.';
+        _receita = null;
+      } else if (area <= 0 || produtividade <= 0 || cotacao <= 0){
+        _erro = 'Os valores precisam ser maiores que zero.';
+        _receita = null;
+      } else {
+        _erro = null;
+        _receita = area * produtividade * cotacao;
+      }
+    });
+  }
 
   // -------------------------------------------------------------------
   // TODO PASSO 9 — A função que limpa os campos e o resultado.
   // -------------------------------------------------------------------
+  void _limpar(){
+    _areaController.clear();
+    _produtividadeController.clear();
+    _cotacaoController.clear();
 
+    setState(() {
+      _receita = null;
+      _erro = null;
+    });
+  }
 
   // -------------------------------------------------------------------
   // TODO PASSO 8 — Libere os controladores no dispose().
@@ -92,6 +121,13 @@ class _TelaCalculadoraState extends State<TelaCalculadora> {
   // void dispose() { ... ; super.dispose(); }
   // -------------------------------------------------------------------
 
+  @override
+  void dispose() { 
+    _areaController.dispose();
+    _produtividadeController.dispose();
+    _cotacaoController.dispose();
+    super.dispose(); 
+    }
 
   // Formata um número no padrão brasileiro. (JÁ PRONTO — não precisa mexer)
   String _reais(double valor) {
@@ -147,6 +183,27 @@ class _TelaCalculadoraState extends State<TelaCalculadora> {
             // ),
             // ---------------------------------------------------------------
 
+            _CampoNumero(
+              controlador: _areaController,
+              rotulo: 'Área do talhão (ha)',
+              icone: Icons.crop_square,
+            ),
+            const SizedBox(height: 16),
+
+            _CampoNumero(
+              controlador: _produtividadeController,
+              rotulo: 'Produtividade (sacas por ha)',
+              icone: Icons.eco,
+            ),
+            const SizedBox(height: 16),
+
+            _CampoNumero(
+              controlador: _cotacaoController,
+              rotulo: 'Cotação da saca (R\$)',
+              icone: Icons.attach_money,
+            ),
+
+
             const SizedBox(height: 24),
 
             // ---------------------------------------------------------------
@@ -154,6 +211,33 @@ class _TelaCalculadoraState extends State<TelaCalculadora> {
             // O Calcular ocupa a maior parte (Expanded) e chama _calcular;
             // o Limpar chama _limpar.
             // ---------------------------------------------------------------
+
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _calcular, 
+                    icon: const Icon(Icons.calculate),
+                    label: const Text('Calcular'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF000000),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+                OutlinedButton(
+                  onPressed: _limpar,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16, horizontal: 20
+                    ),
+                  ),
+                  child: const Text('Limpar'),
+                ),
+              ],
+            ),
 
             const SizedBox(height: 24),
 
@@ -163,6 +247,8 @@ class _TelaCalculadoraState extends State<TelaCalculadora> {
             //
             // _AreaResultado(receita: _receita, erro: _erro, formatar: _reais),
             // ---------------------------------------------------------------
+            _AreaResultado(receita: _receita, erro: _erro, formatar: _reais),
+
           ],
         ),
       ),
